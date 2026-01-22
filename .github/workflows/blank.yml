@@ -1,19 +1,33 @@
-name: CI
+# .github/workflows/ci.yml
+name: Node.js CI
+
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
 jobs:
-  container-test-job:
-    runs-on: arc-runner-set3
-    container:
-      image: node:18
-      env:
-        NODE_ENV: development
-      ports:
-        - 80
-      volumes:
-        - my_docker_volume:/volume_mount
-      options: --cpus 1
+  test:
+    # 关键：使用自托管 runner（由 gha-runner-scale-set 提供）
+    runs-on: self-hosted
+
     steps:
-      - name: Check for dockerenv file
-        run: (ls /.dockerenv && echo Found dockerenv) || (echo No dockerenv)
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: npm  # 自动缓存 node_modules，加速重复构建
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      # 可选：如果需要构建
+      # - name: Build project
+      #   run: npm run build
