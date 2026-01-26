@@ -19,9 +19,6 @@ jobs:
           echo "DOCKER_CERT_PATH: $DOCKER_CERT_PATH"
           echo "Files in ～/.docker:"
           ls -la ～/.docker || echo "No .docker dir"
-
-      - name: 🧪 Test Docker Connection
-        run: docker version
         
       - name: 🕵️‍♂️ Hunt for hidden Docker config
         run: |
