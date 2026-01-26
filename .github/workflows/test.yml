@@ -22,3 +22,14 @@ jobs:
 
       - name: 🧪 Test Docker Connection
         run: docker version
+        
+      - name: 🕵️‍♂️ Hunt for hidden Docker config
+        run: |
+          echo "=== Check all possible config locations ==="
+          find / -name "config.json" -path "*/.docker/*" 2>/dev/null || echo "No config.json found"
+      
+          echo "=== Content of ～/.docker ==="
+          cat ～/.docker/config.json 2>/dev/null || echo "No config.json in home"
+      
+          echo "=== Docker context list ==="
+          docker context ls
