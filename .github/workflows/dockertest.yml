@@ -1,0 +1,68 @@
+name: Test Docker-in-Docker (Build & Push)
+
+on:
+  workflow_dispatch:  # 手动触发，避免自动跑
+  # push:
+  #   branches: [ main ]
+
+jobs:
+  build-and-push:
+    runs-on: [self-hosted, team-a, ci]  # ← 替换为你自己的 runner 标签
+
+    env:
+      # 可选：如果你还没用 wrapper/alias，临时用命令行参数
+      # DOCKER_BUILD_CMD: docker --tlscacert=""
+      # 但推荐已在容器中修复，所以这里直接用 docker
+
+    steps:
+      - name: 🧪 Check Docker Connectivity
+        run: |
+          echo "Testing Docker daemon..."
+          docker version
+          echo "Docker info:"
+          docker info --format 'Containers: {{.Containers}}, Images: {{.Images}}'
+
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐳 Create Simple Dockerfile (if not exists)
+        run: |
+          cat > Dockerfile <<EOF
+FROM alpine:latest
+RUN echo "Hello from DinD!" > /hello.txt
+CMD cat /hello.txt
+EOF
+
+      - name: 🔢 Generate Image Tag
+        id: meta
+        run: |
+          IMAGE_NAME=your-registry.example.com/your-project/test-dind
+          TAG=${GITHUB_SHA::8}
+          echo "IMAGE=$IMAGE_NAME:$TAG" >> "$GITHUB_OUTPUT"
+          echo "FULL_IMAGE=$IMAGE_NAME:$TAG" >> "$GITHUB_ENV"
+
+      - name: 🏗️ Build Docker Image
+        run: |
+          docker build -t ${{ steps.meta.outputs.IMAGE }} .
+
+      - name: 🔍 Verify Image Exists
+        run: |
+          docker images | grep test-dind
+
+      - name: 🔑 Login to Registry (optional)
+        if: ${{ false }}  # ← 默认跳过 push，先测试 build
+        # 如果你要测试 push，请取消注释以下内容并配置 secrets
+        # uses: docker/login-action@v3
+        # with:
+        #   registry: your-registry.example.com
+        #   username: ${{ secrets.REGISTRY_USERNAME }}
+        #   password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: 🚀 Push Image (optional)
+        if: ${{ false }}  # ← 默认跳过
+        # run: docker push ${{ steps.meta.outputs.IMAGE }}
+
+      - name: 🧹 Cleanup (optional but recommended)
+        if: always()
+        run: |
+          docker system prune -af
