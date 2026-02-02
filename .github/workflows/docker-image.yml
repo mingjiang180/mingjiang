@@ -4,7 +4,7 @@ on:
     branches: [ main ]
 jobs:
   container-test-job:
-    runs-on: arc-runner-set7
+    runs-on: arc-runner-set20
     container:
       image: node:18
       env:
