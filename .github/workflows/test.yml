@@ -4,7 +4,7 @@ on:
 
 jobs:
   debug:
-    runs-on: arc-runner-set5
+    runs-on: arc-runner-set22
     env:
       DOCKER_HOST: tcp://localhost:2375
       DOCKER_TLS_VERIFY: "0"
