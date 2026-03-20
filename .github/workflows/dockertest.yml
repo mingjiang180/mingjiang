@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: arc-runner-set22
+    runs-on: flagscale-v1.91-doud
 
     steps:
       - name: 🧪 Check Docker Connectivity
