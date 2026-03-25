@@ -1,0 +1,53 @@
+name: Test Runner Isolation
+on: 
+  workflow_dispatch: # 手动触发测试
+
+jobs:
+  check-isolation:
+    runs-on: dx2-nv-2gpu-smj-v2
+    # 使用矩阵强制产生并发
+    strategy:
+      matrix:
+        index: [1, 2, 3]
+    
+    steps:
+      - name: 1. 验证基础环境变量
+        run: |
+          echo "Current Pod Name: $POD_NAME"
+          echo "Runner Workspace: $RUNNER_WORKSPACE"
+          echo "Working Directory: $(pwd)"
+          
+      - name: 2. 写入唯一特征文件
+        run: |
+          # 在工作目录写入一个包含 Job 索引的文件
+          echo "This is Job ${{ matrix.index }} in Pod $POD_NAME" > isolation_test.txt
+          sleep 10 # 增加等待时间，让并发任务有交集
+
+      - name: 3. 检测是否有邻居污染 (文件读写隔离测试)
+        run: |
+          # 检查当前目录下是否出现了不该有的文件
+          # 如果隔离生效，ls 应该只看到属于自己的文件
+          echo "Listing files in $(pwd):"
+          ls -la
+          
+          CONTENT=$(cat isolation_test.txt)
+          if [[ "$CONTENT" == *"Job ${{ matrix.index }}"* ]]; then
+            echo "✅ 隔离验证通过：内容匹配且无干扰。"
+          else
+            echo "❌ 隔离验证失败：发现内容被篡改！"
+            exit 1
+          fi
+
+      - name: 4. DooD 挂载测试 (核心：检查 Docker 路径映射)
+        run: |
+          # 这是最关键的一步：
+          # 我们启动一个 Docker 容器，并把当前路径挂载进去。
+          # 如果你的宿主机路径和容器路径不一致，这个容器内将看不到任何文件。
+          docker run --rm -v $(pwd):/test alpine cat /test/isolation_test.txt
+          
+          if [ $? -eq 0 ]; then
+            echo "✅ DooD 挂载通过：宿主机与容器路径映射一致。"
+          else
+            echo "❌ DooD 挂载失败：Docker 无法在宿主机找到挂载目录。"
+            exit 1
+          fi
