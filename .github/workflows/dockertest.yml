@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: flagscale-v1.91-doud
+    runs-on: nv-smj-1gpu-test
 
     steps:
       - name: 🧪 Check Docker Connectivity
