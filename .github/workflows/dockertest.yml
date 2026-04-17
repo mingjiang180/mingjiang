@@ -10,7 +10,9 @@ jobs:
     steps:
       - name: 🧪 Check Docker Connectivity
         run: docker --tlscacert="" version
-
+      - name: env
+        run: |
+          export RUNNER_TEMP="/home/runner/_work/nv-smj-1gpu-test-59dzg-runner-2n2hg"
       - name: 📥 Checkout Code
         uses: actions/checkout@v4
         # 此时仓库中的 Dockerfile 已可用
