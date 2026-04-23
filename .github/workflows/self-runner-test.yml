@@ -7,7 +7,7 @@ on:
 jobs:
   basic-check:
     name: Basic System & Network Check
-    runs-on: self-hosted # 如果是测试自托管Runner，请确保你的Runner有此标签，或者改为 'ubuntu-latest' 测试GitHub官方Runner
+    runs-on: nv-smj-test-runner-v1 # 如果是测试自托管Runner，请确保你的Runner有此标签，或者改为 'ubuntu-latest' 测试GitHub官方Runner
     # 如果你使用的是自托管且自定义了标签，例如 'linux', 'x64'，请在这里指定:
     # runs-on: [self-hosted, linux, x64]
 
