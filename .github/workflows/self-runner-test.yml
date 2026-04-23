@@ -1,0 +1,58 @@
+name: 🩺 Runner Health Check
+
+on:
+  # 允许手动触发 (推荐用于测试)
+  workflow_dispatch:
+
+jobs:
+  basic-check:
+    name: Basic System & Network Check
+    runs-on: self-hosted # 如果是测试自托管Runner，请确保你的Runner有此标签，或者改为 'ubuntu-latest' 测试GitHub官方Runner
+    # 如果你使用的是自托管且自定义了标签，例如 'linux', 'x64'，请在这里指定:
+    # runs-on: [self-hosted, linux, x64]
+
+    steps:
+      - name: 📥 检出代码 (可选)
+        uses: actions/checkout@v4
+
+      - name: ℹ️ 显示系统信息
+        run: |
+          echo "🏃 当前运行用户: $(whoami)"
+          echo "🐧 操作系统版本:"
+          cat /etc/os-release
+          echo "💻 CPU 架构:"
+          uname -m
+          echo "📦 内存信息:"
+          free -h
+
+      - name: 🌍 测试 DNS 解析
+        run: |
+          echo "正在测试 DNS 解析..."
+          if command -v nslookup &> /dev/null; then
+            nslookup github.com
+          elif command -v dig &> /dev/null; then
+            dig github.com
+          else
+            ping -c 1 github.com
+          fi
+
+      - name: 🔗 测试 HTTPS 连接 (Curl)
+        run: |
+          echo "正在测试与 GitHub API 的连接..."
+          curl -I https://api.github.com
+          
+      - name: 🐳 检查 Docker 状态 (如果 Runner 需要构建容器)
+        run: |
+          if command -v docker &> /dev/null; then
+            echo "✅ Docker 已安装"
+            docker --version
+            docker info
+          else
+            echo "⚠️ Docker 未安装或未找到"
+          fi
+
+      - name: 🕒 模拟耗时任务
+        run: |
+          echo "等待 5 秒以测试超时设置..."
+          sleep 5
+          echo "完成！"
