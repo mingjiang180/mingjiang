@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: nv-smj-1gpu-test
+    runs-on: mr-smj-test-runner-v1
 
     steps:
       - name: 🧪 Check Docker Connectivity
