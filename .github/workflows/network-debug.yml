@@ -1,0 +1,74 @@
+name: Network Connectivity Debug
+
+on:
+  # 允许在 GitHub 页面上手动触发运行
+  workflow_dispatch:
+  # 如果需要，可以取消注释下面两行，让它在推送到 main 分支时自动触发
+  # push:
+  #   branches: [ "main" ]
+
+jobs:
+  network-test:
+    runs-on: mx-test-v1
+    
+    # 指定运行环境的容器镜像
+    container:
+      image: harbor.baai.ac.cn/baai-infra/actions-runner:ubuntu-22.04
+      # 如果你的 Harbor 镜像仓库需要登录凭证，请取消下面三行的注释，并在 GitHub Repo Settings -> Secrets 中配置
+      # credentials:
+      #   username: ${{ secrets.HARBOR_USERNAME }}
+      #   password: ${{ secrets.HARBOR_PASSWORD }}
+
+    steps:
+      - name: 检出代码 (Checkout)
+        uses: actions/checkout@v4
+
+      - name: 环境预检 (安装基础调试工具)
+        run: |
+          echo "=== 正在检查并安装必要的网络调试工具 ==="
+          # 更新包管理器，确保 dnsutils (包含 nslookup/dig) 和 netcat 存在
+          # 如果你的镜像已经自带这些工具，这一步会自动跳过或执行极快
+          sudo apt-get update -y && sudo apt-get install -y dnsutils netcat-openbsd curl iputils-ping || \
+          apt-get update -y && apt-get install -y dnsutils netcat-openbsd curl iputils-ping
+
+      - name: 诊断网络连通性
+        run: |
+          TARGET_HOST="flagcicd-inner.flagos.net"
+          TARGET_PORT="8000"
+          
+          echo "=================================================="
+          echo " 🕵️ 开始诊断容器内到 ${TARGET_HOST} 的网络状况"
+          echo "=================================================="
+          echo ""
+          
+          echo "=== 1. 测试 DNS 解析 ==="
+          if nslookup "$TARGET_HOST"; then
+            echo "✅ DNS 解析成功"
+          else
+            echo "❌ DNS 解析失败！容器无法通过当前 DNS 服务器找到该域名。"
+          fi
+          echo "--------------------------------------------------"
+
+          echo "=== 2. 测试 Ping (ICMP 连通性) ==="
+          # 发送 3 个包，超时时间 5 秒
+          if ping -c 3 -w 5 "$TARGET_HOST"; then
+            echo "✅ Ping 成功，网络三层可达"
+          else
+            echo "⚠️ Ping 失败（可能是禁用了 ICMP，或者网络确实不通）"
+          fi
+          echo "--------------------------------------------------"
+
+          echo "=== 3. 测试目标端口连通性 (TCP 8000) ==="
+          # 使用 nc 探测端口，超时 5 秒
+          if nc -zv -w 5 "$TARGET_HOST" "$TARGET_PORT"; then
+            echo "✅ 成功连通到端口 ${TARGET_PORT}！"
+          else
+            echo "❌ 无法连接到端口 ${TARGET_PORT}！请检查内网安全组、防火墙或路由策略。"
+          fi
+          echo "--------------------------------------------------"
+
+          echo "=== 4. 模拟简易模拟 Curl 请求 ==="
+          echo "尝试发送一个快速请求，查看服务器是否能即时响应头信息："
+          # --connect-timeout 限制连接时间为 5 秒
+          curl -I --connect-timeout 5 "http://${TARGET_HOST}:${TARGET_PORT}/" || echo "❌ Curl 连接超时或失败"
+          echo "=================================================="
