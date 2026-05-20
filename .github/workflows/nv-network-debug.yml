@@ -1,4 +1,4 @@
-name: Network Connectivity Debug
+name: nv Network Connectivity Debug
 
 on:
   # 允许在 GitHub 页面上手动触发运行
