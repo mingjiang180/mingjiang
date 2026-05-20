@@ -18,55 +18,6 @@ jobs:
       #   username: ${{ secrets.HARBOR_USERNAME }}
       #   password: ${{ secrets.HARBOR_PASSWORD }}
     steps:
-      - name: 方案 1：在宿主机原生直接上传或测试
-        run: |
-          echo "=================================================="
-          echo " 🏠 正在在宿主机原生测试连通性 "
-          echo "=================================================="
-          TARGET_HOST="flagcicd-inner.flagos.net"
-          TARGET_PORT="8000"
-          
-          # 宿主机带有全局环境代理，访问内网必须临时清空代理环境变量，确保直连
-          unset HTTP_PROXY http_proxy HTTPS_PROXY https_proxy
-          
-          if (exec 3<>/dev/tcp/"$TARGET_HOST"/"$TARGET_PORT") 2>/dev/null; then
-            echo "✅ 宿主机原生连通成功！说明宿主机网络完全具备访问能力。"
-            exec 3>&-
-          else
-            echo "❌ 宿主机竟然也不通？请确认宿主机上 /etc/profile 或 /etc/environment 的代理白名单。"
-          fi
-
-      - name: 方案 2：如果必须用指定的 Harbor 镜像运行你的命令/构建
-        run: |
-          echo "=================================================="
-          echo " 🐋 通过宿主机手动拉起容器，并强制绑定 host 网络 "
-          echo "=================================================="
-          
-          # 直接在宿主机运行 docker run
-          # --network host: 让容器 100% 共享并继承宿主机的网络和 DNS 栈，不产生隔离网桥
-          # -v ${{ github.workspace }}:/workspace: 保证容器内能读写当前项目的代码
-          
-          docker run --rm \
-            --network host \
-            -v ${{ github.workspace }}:/workspace \
-            -w /workspace \
-            harbor.baai.ac.cn/baai-infra/actions-runner:ubuntu-22.04-arm64 \
-            sh -c '
-              TARGET_HOST="flagcicd-inner.flagos.net"
-              TARGET_PORT="8000"
-              
-              echo "=== 正在容器（Host网络模式）内进行底层探测 ==="
-              # 清理容器内继承的代理
-              unset HTTP_PROXY http_proxy HTTPS_PROXY https_proxy
-              
-              if (exec 3<>/dev/tcp/"$TARGET_HOST"/"$TARGET_PORT") 2>/dev/null; then
-                echo "✅✅✅ 容器内通过 Host 模式连通成功！！！"
-                echo "你可以在这里放心跑你的 curl 命令或测试了。"
-                exec 3>&-
-              else
-                echo "❌ 依旧失败，请检查宿主机底层的网络路由。"
-              fi
-            '
       - name: 保持容器运行 (睡眠 30 分钟)
         run: |
           echo "=================================================="
