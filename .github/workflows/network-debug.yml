@@ -20,8 +20,6 @@ jobs:
       #   password: ${{ secrets.HARBOR_PASSWORD }}
 
     steps:
-      - name: 检出代码 (Checkout)
-        uses: actions/checkout@v4
 
       - name: 环境预检 (安装基础调试工具)
         run: |
