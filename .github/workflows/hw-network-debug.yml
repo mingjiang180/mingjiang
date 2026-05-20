@@ -18,6 +18,7 @@ jobs:
       # credentials:
       #   username: ${{ secrets.HARBOR_USERNAME }}
       #   password: ${{ secrets.HARBOR_PASSWORD }}
+      options: --network host
 
     steps:
 
