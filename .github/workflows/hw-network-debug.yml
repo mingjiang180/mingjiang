@@ -24,10 +24,13 @@ jobs:
       - name: 环境预检 (安装基础调试工具)
         run: |
           echo "=== 正在检查并安装必要的网络调试工具 ==="
-          # 更新包管理器，确保 dnsutils (包含 nslookup/dig) 和 netcat 存在
-          # 如果你的镜像已经自带这些工具，这一步会自动跳过或执行极快
-          apt-get update -y && sudo apt-get install -y dnsutils netcat-openbsd curl iputils-ping || \
-          apt-get update -y && apt-get install -y dnsutils netcat-openbsd curl iputils-ping
+          # 在 ARM64 的 Ubuntu 上，有些基础镜像为了精简没有自带 sudo，这里做兼容处理
+          if command -v apt-get &> /dev/null; then
+            (sudo apt-get update -y && sudo apt-get install -y dnsutils netcat-openbsd curl iputils-ping) || \
+            (apt-get update -y && apt-get install -y dnsutils netcat-openbsd curl iputils-ping)
+          elif command -v yum &> /dev/null; then
+            yum install -y bind-utils nc curl iputils
+          fi
 
       - name: 诊断网络连通性
         run: |
