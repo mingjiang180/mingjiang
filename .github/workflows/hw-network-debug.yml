@@ -21,57 +21,37 @@ jobs:
 
     steps:
 
-      - name: 环境预检 (安装基础调试工具)
-        run: |
-         echo "=== 正在检查并安装必要的网络调试工具 ==="
-          
-          # 强制清理可能残留的 sudo 别名或环境变量
-          unalias sudo 2>/dev/null || true
-          
-          # 绕过所有判断，直接以 root 身份更新并安装
-          # 加上 || true 确保即使某个包找不到，也不影响整个工作流往下走
-          apt-get update -y || true
-          apt-get install -y dnsutils netcat-openbsd curl iputils-ping || true
-          
-          echo "=== 工具安装步骤结束，准备开始诊断 ==="
-      - name: 诊断网络连通性
+      - name: 诊断网络连通性 (纯原生 sh 兼容)
+        shell: sh  # 显式指定使用 sh，去掉 -e 限制
         run: |
           TARGET_HOST="flagcicd-inner.flagos.net"
-          TARGET_PORT="8000"
+          TARGET_PORT="8000"          
           
           echo "=================================================="
-          echo " 🕵️ 开始诊断容器内到 ${TARGET_HOST} 的网络状况"
+          echo " 开始诊断容器内到 $TARGET_HOST 的网络状况 "
           echo "=================================================="
           echo ""
           
-          echo "=== 1. 测试 DNS 解析 ==="
-          if nslookup "$TARGET_HOST"; then
-            echo "✅ DNS 解析成功"
-          else
-            echo "❌ DNS 解析失败！容器无法通过当前 DNS 服务器找到该域名。"
-          fi
+          echo "=== 1. 尝试查看容器内置的 DNS 配置 ==="
+          cat /etc/resolv.conf || echo "无法读取 /etc/resolv.conf"
           echo "--------------------------------------------------"
 
-          echo "=== 2. 测试 Ping (ICMP 连通性) ==="
-          # 发送 3 个包，超时时间 5 秒
-          if ping -c 3 -w 5 "$TARGET_HOST"; then
-            echo "✅ Ping 成功，网络三层可达"
-          else
-            echo "⚠️ Ping 失败（可能是禁用了 ICMP，或者网络确实不通）"
-          fi
+          echo "=== 2. 测试 Ping (如果系统支持) ==="
+          # 发送 2 个包，限时 3 秒
+          ping -c 2 -w 3 "$TARGET_HOST" || ping -c 2 "$TARGET_HOST" || echo "⚠️ Ping 失败或系统无 ping 命令"
           echo "--------------------------------------------------"
 
-          echo "=== 3. 测试目标端口连通性 (TCP 8000) ==="
-          # 使用 nc 探测端口，超时 5 秒
-          if nc -zv -w 5 "$TARGET_HOST" "$TARGET_PORT"; then
-            echo "✅ 成功连通到端口 ${TARGET_PORT}！"
+          echo "=== 3. 终极测试：原生 TCP 端口连通性 ==="
+          echo "正在尝试建立到 $TARGET_HOST:$TARGET_PORT 的连接..."
+          
+          # 使用 sh 兼容的底层文件重定向探测端口
+          # 如果连不上，通常会卡住或直接拒绝
+          if (exec 3<>/dev/tcp/"$TARGET_HOST"/"$TARGET_PORT") 2>/dev/null; then
+            echo "✅ 成功！容器可以直接连通到目标端口 $TARGET_PORT"
+            # 关闭文件描述符
+            exec 3>&-
           else
-            echo "❌ 无法连接到端口 ${TARGET_PORT}！请检查内网安全组、防火墙或路由策略。"
+            echo "❌ 失败！容器无法连接到目标端口 $TARGET_PORT"
+            echo "可能原因：1. DNS 无法解析该域名；2. 宿主机禁止了容器网段的出网流量；3. 目标服务器防火墙拦截。"
           fi
-          echo "--------------------------------------------------"
-
-          echo "=== 4. 模拟简易模拟 Curl 请求 ==="
-          echo "尝试发送一个快速请求，查看服务器是否能即时响应头信息："
-          # --connect-timeout 限制连接时间为 5 秒
-          curl -I --connect-timeout 5 "http://${TARGET_HOST}:${TARGET_PORT}/" || echo "❌ Curl 连接超时或失败"
           echo "=================================================="
