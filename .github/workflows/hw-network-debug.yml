@@ -10,6 +10,13 @@ on:
 jobs:
   network-test:
     runs-on: hw-test-v1
+    # 指定运行环境的容器镜像
+    container:
+      image: harbor.baai.ac.cn/baai-infra/actions-runner:ubuntu-22.04-arm64
+      # 如果你的 Harbor 镜像仓库需要登录凭证，请取消下面三行的注释，并在 GitHub Repo Settings -> Secrets 中配置
+      # credentials:
+      #   username: ${{ secrets.HARBOR_USERNAME }}
+      #   password: ${{ secrets.HARBOR_PASSWORD }}
     steps:
       - name: 方案 1：在宿主机原生直接上传或测试
         run: |
