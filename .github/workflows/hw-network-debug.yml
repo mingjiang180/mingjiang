@@ -19,6 +19,7 @@ jobs:
       #   password: ${{ secrets.HARBOR_PASSWORD }}
     steps:
       - name: 保持容器运行 (睡眠 30 分钟)
+        shell: sh
         run: |
           echo "=================================================="
           echo "💤 诊断已完成，容器即将进入睡眠模式，保持运行 30 分钟..."
