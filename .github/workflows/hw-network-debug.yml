@@ -25,23 +25,15 @@ jobs:
         run: |
          echo "=== 正在检查并安装必要的网络调试工具 ==="
           
-          # 定义需要安装的软件列表
-          PACKAGES="dnsutils netcat-openbsd curl iputils-ping"
+          # 强制清理可能残留的 sudo 别名或环境变量
+          unalias sudo 2>/dev/null || true
           
-          # 判断是否可以使用 apt-get
-          if command -v apt-get &> /dev/null; then
-            # 如果有 sudo 命令则使用 sudo，否则直接执行
-            if command -v sudo &> /dev/null; then
-              sudo apt-get update -y && sudo apt-get install -y $PACKAGES
-            else
-              apt-get update -y && apt-get install -y $PACKAGES
-            fi
-          # 如果是 RedHat/CentOS/Fedora 系镜像
-          elif command -v yum &> /dev/null; then
-            yum install -y bind-utils nc curl iputils
-          else
-            echo "⚠️ 未找到兼容的包管理器，尝试直接进行后续测试..."
-          fi
+          # 绕过所有判断，直接以 root 身份更新并安装
+          # 加上 || true 确保即使某个包找不到，也不影响整个工作流往下走
+          apt-get update -y || true
+          apt-get install -y dnsutils netcat-openbsd curl iputils-ping || true
+          
+          echo "=== 工具安装步骤结束，准备开始诊断 ==="
       - name: 诊断网络连通性
         run: |
           TARGET_HOST="flagcicd-inner.flagos.net"
