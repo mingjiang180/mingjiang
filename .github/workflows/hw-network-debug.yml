@@ -18,7 +18,9 @@ jobs:
       # credentials:
       #   username: ${{ secrets.HARBOR_USERNAME }}
       #   password: ${{ secrets.HARBOR_PASSWORD }}
-      options: --dns 114.114.114.114
+      options: >-
+        -e "NO_PROXY=localhost,127.0.0.1,flagos.net,.flagos.net,10.1.12.38"
+        -e "no_proxy=localhost,127.0.0.1,flagos.net,.flagos.net,10.1.12.38"
 
     steps:
 
@@ -28,31 +30,13 @@ jobs:
           TARGET_HOST="flagcicd-inner.flagos.net"
           TARGET_PORT="8000"          
           
-          echo "=================================================="
-          echo " 开始诊断容器内到 $TARGET_HOST 的网络状况 "
-          echo "=================================================="
-          echo ""
+          echo "=== 正在尝试直连探测 $TARGET_HOST:$TARGET_PORT ==="
           
-          echo "=== 1. 尝试查看容器内置的 DNS 配置 ==="
-          cat /etc/resolv.conf || echo "无法读取 /etc/resolv.conf"
-          echo "--------------------------------------------------"
-
-          echo "=== 2. 测试 Ping (如果系统支持) ==="
-          # 发送 2 个包，限时 3 秒
-          ping -c 2 -w 3 "$TARGET_HOST" || ping -c 2 "$TARGET_HOST" || echo "⚠️ Ping 失败或系统无 ping 命令"
-          echo "--------------------------------------------------"
-
-          echo "=== 3. 终极测试：原生 TCP 端口连通性 ==="
-          echo "正在尝试建立到 $TARGET_HOST:$TARGET_PORT 的连接..."
-          
-          # 使用 sh 兼容的底层文件重定向探测端口
-          # 如果连不上，通常会卡住或直接拒绝
+          # 使用纯原生底层套接字直连，不依赖 ping，不依赖 nc
           if (exec 3<>/dev/tcp/"$TARGET_HOST"/"$TARGET_PORT") 2>/dev/null; then
-            echo "✅ 成功！容器可以直接连通到目标端口 $TARGET_PORT"
-            # 关闭文件描述符
+            echo "✅ 成功！！！容器可以直连到目标端口 $TARGET_PORT！"
             exec 3>&-
           else
-            echo "❌ 失败！容器无法连接到目标端口 $TARGET_PORT"
-            echo "可能原因：1. DNS 无法解析该域名；2. 宿主机禁止了容器网段的出网流量；3. 目标服务器防火墙拦截。"
+            echo "❌ 仍然失败！"
+            echo "如果还失败，说明该容器网段被物理防火墙/宿主机 iptables 彻底拦截了。"
           fi
-          echo "=================================================="
