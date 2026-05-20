@@ -26,7 +26,7 @@ jobs:
           echo "=== 正在检查并安装必要的网络调试工具 ==="
           # 更新包管理器，确保 dnsutils (包含 nslookup/dig) 和 netcat 存在
           # 如果你的镜像已经自带这些工具，这一步会自动跳过或执行极快
-          sudo apt-get update -y && sudo apt-get install -y dnsutils netcat-openbsd curl iputils-ping || \
+          apt-get update -y && sudo apt-get install -y dnsutils netcat-openbsd curl iputils-ping || \
           apt-get update -y && apt-get install -y dnsutils netcat-openbsd curl iputils-ping
 
       - name: 诊断网络连通性
