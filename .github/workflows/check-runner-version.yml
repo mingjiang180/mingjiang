@@ -1,0 +1,67 @@
+name: Sync Actions Runner Image to Harbor
+
+on:
+  # 支持手动触发，也支持定时触发（例如每天凌晨 2 点执行）
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * *'
+
+jobs:
+  check-and-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR (Source)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Harbor (Target)
+        uses: docker/login-action@v3
+        with:
+          registry: harbor.baai.ac.cn
+          username: ${{ secrets.HARBOR_USERNAME }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
+      - name: Get source image digest (ghcr.io)
+        id: get_source_digest
+        run: |
+          SOURCE_DIGEST=$(docker buildx imagetools inspect ghcr.io/actions/actions-runner:latest --format '{{json .Manifest.Digest}}')
+          echo "digest=${SOURCE_DIGEST}" >> $GITHUB_OUTPUT
+          echo "Source image digest: $SOURCE_DIGEST"
+
+      - name: Get target image digest (harbor.baai.ac.cn)
+        id: get_target_digest
+        run: |
+          # 尝试获取目标镜像的 digest，如果镜像不存在，返回空字符串
+          TARGET_DIGEST=$(docker buildx imagetools inspect harbor.baai.ac.cn/baai-infra/actions-runner:latest --format '{{json .Manifest.Digest}}' 2>/dev/null || echo "")
+          echo "digest=${TARGET_DIGEST}" >> $GITHUB_OUTPUT
+          echo "Target image digest: $TARGET_DIGEST"
+
+      - name: Compare digests and sync if necessary
+        if: steps.get_source_digest.outputs.digest != steps.get_target_digest.outputs.digest
+        run: |
+          echo "Digests do not match. Starting to pull from GHCR and push to Harbor..."
+          
+          # 拉取 ghcr.io 的多架构镜像到本地
+          docker pull ghcr.io/actions/actions-runner:latest
+          
+          # 为目标 Harbor 仓库打上标签
+          docker tag ghcr.io/actions/actions-runner:latest harbor.baai.ac.cn/baai-infra/actions-runner:latest
+          
+          # 推送多架构镜像到 Harbor 仓库
+          docker push harbor.baai.ac.cn/baai-infra/actions-runner:latest
+          
+          echo "Successfully synced the latest multi-arch image to Harbor."
+
+      - name: Skip sync if already up to date
+        if: steps.get_source_digest.outputs.digest == steps.get_target_digest.outputs.digest
+        run: |
+          echo "The Harbor image is already the latest version. No action needed."
