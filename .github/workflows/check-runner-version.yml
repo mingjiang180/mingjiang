@@ -1,18 +1,14 @@
-name: Sync Actions Runner Image to Harbor
+name: Sync Multi-Arch Actions Runner Image
 
 on:
-  # 支持手动触发，也支持定时触发（例如每天凌晨 2 点执行）
-  workflow_dispatch:
+  workflow_dispatch: # 支持手动触发
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 2 * * *' # 每天凌晨2点自动检查
 
 jobs:
-  check-and-sync:
+  sync-image:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -33,6 +29,7 @@ jobs:
       - name: Get source image digest (ghcr.io)
         id: get_source_digest
         run: |
+          # 获取源镜像的多架构 Manifest 摘要
           SOURCE_DIGEST=$(docker buildx imagetools inspect ghcr.io/actions/actions-runner:latest --format '{{json .Manifest.Digest}}')
           echo "digest=${SOURCE_DIGEST}" >> $GITHUB_OUTPUT
           echo "Source image digest: $SOURCE_DIGEST"
@@ -40,28 +37,25 @@ jobs:
       - name: Get target image digest (harbor.baai.ac.cn)
         id: get_target_digest
         run: |
-          # 尝试获取目标镜像的 digest，如果镜像不存在，返回空字符串
+          # 尝试获取目标镜像的摘要，如果不存在则返回空
           TARGET_DIGEST=$(docker buildx imagetools inspect harbor.baai.ac.cn/baai-infra/actions-runner:latest --format '{{json .Manifest.Digest}}' 2>/dev/null || echo "")
           echo "digest=${TARGET_DIGEST}" >> $GITHUB_OUTPUT
           echo "Target image digest: $TARGET_DIGEST"
 
-      - name: Compare digests and sync if necessary
+      - name: Sync multi-arch image using imagetools
         if: steps.get_source_digest.outputs.digest != steps.get_target_digest.outputs.digest
         run: |
-          echo "Digests do not match. Starting to pull from GHCR and push to Harbor..."
+          echo "Digests do not match. Syncing multi-arch image from GHCR to Harbor..."
           
-          # 拉取 ghcr.io 的多架构镜像到本地
-          docker pull ghcr.io/actions/actions-runner:latest
-          
-          # 为目标 Harbor 仓库打上标签
-          docker tag ghcr.io/actions/actions-runner:latest harbor.baai.ac.cn/baai-infra/actions-runner:latest
-          
-          # 推送多架构镜像到 Harbor 仓库
-          docker push harbor.baai.ac.cn/baai-infra/actions-runner:latest
+          # 核心修正：使用 buildx imagetools create 直接复制多架构清单
+          # 它不会在本地拉取镜像层，而是直接在远程仓库间同步 AMD64 和 ARM64 的镜像数据
+          docker buildx imagetools create \
+            --tag harbor.baai.ac.cn/baai-infra/actions-runner:latest \
+            ghcr.io/actions/actions-runner:latest
           
           echo "Successfully synced the latest multi-arch image to Harbor."
 
       - name: Skip sync if already up to date
         if: steps.get_source_digest.outputs.digest == steps.get_target_digest.outputs.digest
         run: |
-          echo "The Harbor image is already the latest version. No action needed."
+          echo "The Harbor image is already the latest version (both amd64 and arm64). No action needed."
