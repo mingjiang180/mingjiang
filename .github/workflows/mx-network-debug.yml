@@ -18,6 +18,18 @@ jobs:
       # credentials:
       #   username: ${{ secrets.HARBOR_USERNAME }}
       #   password: ${{ secrets.HARBOR_PASSWORD }}
+      env:
+        ACTIONS_RUNNER_CONTAINER_HOOK_TEMPLATE: |
+          spec:
+            containers:
+              - name: $CONTAINER_NAME
+                resources:
+                  requests:
+                    cpu: "4"
+                    memory: "8Gi"
+                  limits:
+                    cpu: "8"
+                    memory: "16Gi"
 
     steps:
 
