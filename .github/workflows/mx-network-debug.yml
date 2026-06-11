@@ -9,7 +9,7 @@ on:
 
 jobs:
   network-test:
-    runs-on: mx-test-v7
+    runs-on: mx-test-v10
     # 指定运行环境的容器镜像
     container:
       image: harbor.baai.ac.cn/flagscale/vllm-plugin-fl:v0.1.0-maca-ci
