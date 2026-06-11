@@ -49,7 +49,7 @@ jobs:
           
           # 核心修正：使用 buildx imagetools create 直接复制多架构清单
           # 它不会在本地拉取镜像层，而是直接在远程仓库间同步 AMD64 和 ARM64 的镜像数据
-          docker buildx imagetools create \
+          GODEBUG=http2client=0 docker buildx imagetools create \
             --tag harbor.baai.ac.cn/baai-infra/actions-runner:latest \
             ghcr.io/actions/actions-runner:latest
           
