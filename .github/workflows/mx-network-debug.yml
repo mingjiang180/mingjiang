@@ -11,8 +11,8 @@ jobs:
   network-test:
     runs-on: mx-test-v10
     # 指定运行环境的容器镜像
-    container:
-      image: harbor.baai.ac.cn/flagscale/vllm-plugin-fl:v0.1.0-maca-ci
+    # container:
+    #   image: harbor.baai.ac.cn/flagscale/vllm-plugin-fl:v0.1.0-maca-ci
       # 如果你的 Harbor 镜像仓库需要登录凭证，请取消下面三行的注释，并在 GitHub Repo Settings -> Secrets 中配置
       # credentials:
       #   username: ${{ secrets.HARBOR_USERNAME }}
