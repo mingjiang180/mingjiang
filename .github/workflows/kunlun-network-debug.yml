@@ -9,7 +9,7 @@ on:
 
 jobs:
   network-test:
-    runs-on: kunlun-test-v2
+    runs-on: kunlun-test-v3
     
     # 指定运行环境的容器镜像
     container:
