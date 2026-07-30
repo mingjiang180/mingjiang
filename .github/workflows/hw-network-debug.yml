@@ -9,7 +9,7 @@ on:
 
 jobs:
   network-test:
-    runs-on: hw-test-v10
+    runs-on: hw-testv10
     # 指定运行环境的容器镜像
     container:
       image: harbor.baai.ac.cn/baai-infra/actions-runner:ubuntu-22.04
