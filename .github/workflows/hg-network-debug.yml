@@ -9,7 +9,7 @@ on:
 
 jobs:
   network-test:
-    runs-on: hg-test-v10
+    runs-on: hg-test-v12
     
     # 指定运行环境的容器镜像
     container:
