@@ -9,7 +9,7 @@ on:
 
 jobs:
   network-test:
-    runs-on: mr-test-v15
+    runs-on: mr-test-v5
     
     # 指定运行环境的容器镜像
     container:
