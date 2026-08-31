@@ -9,11 +9,11 @@ on:
 
 jobs:
   network-test:
-    runs-on: nv-test-v5
+    runs-on: nv-test-v10
     
     # 指定运行环境的容器镜像
-    # container:
-    #   image: harbor.baai.ac.cn/flagscale/cuda12.8.1-torch2.7.1-python3.10-te2.9:20260209
+    container:
+      image: harbor.baai.ac.cn/baai-infra/actions-runner:ubuntu-22.04
     #   # 如果你的 Harbor 镜像仓库需要登录凭证，请取消下面三行的注释，并在 GitHub Repo Settings -> Secrets 中配置
     #   # credentials:
     #   #   username: ${{ secrets.HARBOR_USERNAME }}
