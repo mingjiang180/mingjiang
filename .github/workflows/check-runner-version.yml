@@ -7,7 +7,7 @@ on:
 
 jobs:
   sync-image:
-    runs-on: ubuntu-latest
+    runs-on: runner-manager-image-build-dood
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
