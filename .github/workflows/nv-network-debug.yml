@@ -10,7 +10,9 @@ on:
 jobs:
   network-test:
     runs-on: smj-nv-test4
-
+    env:
+      ACTIONS_RUNNER_DEBUG: 'true'
+      ACTIONS_STEP_DEBUG: 'true'
     container:
       image: harbor.baai.ac.cn/baai-infra/actions-runner:ubuntu-22.04
       
