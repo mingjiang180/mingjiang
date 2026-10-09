@@ -12,7 +12,7 @@ jobs:
     runs-on: smj-nv-test4
 
     container:
-      image: harbor.baai.ac.cn/plugin/vllm-plugin-fl:v0.28.0-cuda-ci
+      image: harbor.baai.ac.cn/baai-infra/actions-runner:ubuntu-22.04
       
     steps:
       - name: Check out repository
