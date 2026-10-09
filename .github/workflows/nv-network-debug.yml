@@ -9,7 +9,7 @@ on:
 
 jobs:
   network-test:
-    runs-on: smj-nv-test5
+    runs-on: smj-nv-test4
     env:
       ACTIONS_RUNNER_DEBUG: 'true'
       ACTIONS_STEP_DEBUG: 'true'
