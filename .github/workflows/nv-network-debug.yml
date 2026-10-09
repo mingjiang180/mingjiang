@@ -10,8 +10,10 @@ on:
 jobs:
   network-test:
     runs-on: smj-nv-test4
-    
 
+    container:
+      image: harbor.baai.ac.cn/plugin/vllm-plugin-fl:v0.28.0-cuda-ci
+      
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
