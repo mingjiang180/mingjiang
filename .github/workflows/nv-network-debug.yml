@@ -9,7 +9,7 @@ on:
 
 jobs:
   network-test:
-    runs-on: nv-smj-test-v11
+    runs-on: smj-nv-test4
     
 
     steps:
