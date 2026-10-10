@@ -3,6 +3,12 @@ name: nv Network Connectivity Debug
 on:
   # 允许在 GitHub 页面上手动触发运行
   workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Enable debug logging'
+        required: false
+        default: false
+        type: boolean
   # 如果需要，可以取消注释下面两行，让它在推送到 main 分支时自动触发
   # push:
   #   branches: [ "main" ]
@@ -11,8 +17,8 @@ jobs:
   network-test:
     runs-on: smj-nv-test5
     env:
-      ACTIONS_RUNNER_DEBUG: 'true'
-      ACTIONS_STEP_DEBUG: 'true'
+      ACTIONS_RUNNER_DEBUG: ${{ inputs.debug_enabled }}
+      ACTIONS_STEP_DEBUG: ${{ inputs.debug_enabled }}
     container:
       image: harbor.baai.ac.cn/baai-infra/actions-runner:ubuntu-22.04
       
