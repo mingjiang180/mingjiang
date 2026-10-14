@@ -23,8 +23,6 @@ jobs:
       image: harbor.baai.ac.cn/baai-infra/actions-runner:ubuntu-22.04
       
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
           
       - name: 环境预检 (安装基础调试工具)
         run: |
