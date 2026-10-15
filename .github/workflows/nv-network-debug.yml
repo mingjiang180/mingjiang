@@ -15,7 +15,7 @@ on:
 
 jobs:
   network-test:
-    runs-on: smj-nv-test7
+    runs-on: smj-k8s-test1
     env:
       ACTIONS_RUNNER_DEBUG: ${{ inputs.debug_enabled }}
       ACTIONS_STEP_DEBUG: ${{ inputs.debug_enabled }}
@@ -23,7 +23,9 @@ jobs:
       image: harbor.baai.ac.cn/baai-infra/actions-runner:ubuntu-22.04
       
     steps:
-          
+      - name: Check out repository
+        uses: actions/checkout@v4        
+        
       - name: 环境预检 (安装基础调试工具)
         run: |
           echo "=================================================="
