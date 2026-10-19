@@ -9,7 +9,7 @@ on:
 
 jobs:
   network-test:
-    runs-on: kunlun-test-v3
+    runs-on: smj-kl-test1
     
     # 指定运行环境的容器镜像
     container:
@@ -20,7 +20,14 @@ jobs:
       #   password: ${{ secrets.HARBOR_PASSWORD }}
 
     steps:
-
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        continue-on-error: true
+      # Use fully-qualified @master refs instead of local ./ paths. On the
+      # klx-p800 k8s-novolume runner, local actions are resolved by the runner
+      # against /home/runner/_work while checkout writes to the container's
+      # /__w, so ./ refs can't be found. Remote refs are fetched into the
+      # runner's _actions cache and don't depend on the workspace path.
+      - uses: flagos-ai/FlagGems/.github/actions/checkout-retry@master
       - name: 环境预检 (安装基础调试工具)
         run: |
           echo "=== 正在检查并安装必要的网络调试工具 ==="
