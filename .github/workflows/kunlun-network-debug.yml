@@ -27,7 +27,7 @@ jobs:
       # against /home/runner/_work while checkout writes to the container's
       # /__w, so ./ refs can't be found. Remote refs are fetched into the
       # runner's _actions cache and don't depend on the workspace path.
-      - uses: flagos-ai/FlagGems/.github/actions/checkout-retry@master
+      # - uses: flagos-ai/FlagGems/.github/actions/checkout-retry@master
       - name: 环境预检 (安装基础调试工具)
         run: |
           echo "=== 正在检查并安装必要的网络调试工具 ==="
