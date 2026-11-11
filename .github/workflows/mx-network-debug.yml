@@ -13,7 +13,7 @@ jobs:
     timeout-minutes: 240
     # 指定运行环境的容器镜像
     container:
-      image: harbor.baai.ac.cn/flagscale/vllm-plugin-fl:v0.1.0-maca-ci
+      image: harbor.baai.ac.cn/flagos-dev/flagcx-metax-maca3.8.1.3:2.3.0@sha256:e9b511953d3e8675b1e8d215b7d2f4777a5d7898bd2cee9e7e58a6663c56e575
       # 如果你的 Harbor 镜像仓库需要登录凭证，请取消下面三行的注释，并在 GitHub Repo Settings -> Secrets 中配置
       # credentials:
       #   username: ${{ secrets.HARBOR_USERNAME }}
