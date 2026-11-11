@@ -18,7 +18,7 @@ on:
 
 jobs:
   network-test:
-    runs-on: smj-sy-test1-dood
+    runs-on: smj-sy-test1
     env:
       ACTIONS_RUNNER_DEBUG: ${{ inputs.debug_enabled }}
       ACTIONS_STEP_DEBUG: ${{ inputs.debug_enabled }}
