@@ -9,7 +9,7 @@ on:
 
 jobs:
   network-test:
-    runs-on: smj-mr-test2
+    runs-on: smj-mr-test10
     
     # 指定运行环境的容器镜像
     container:
